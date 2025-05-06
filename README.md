@@ -4,7 +4,7 @@
 
 This repository provides the C++ implementation accompanying our research paper:
 
-**"[Full Title of Your Paper: Dishonest Majority Multiparty Computation over Matrix Rings]"** *Authors: [Author 1, Author 2, ...]* *Published in/Presented at: [Conference/Journal Name or ePrint Archive Link, Year]*
+**"[FDishonest Majority Multiparty Computation over Matrix Rings]"** 
 
 The code focuses on secure multiparty computation (MPC) protocols designed to operate directly over **matrix rings** (e.g., $M_n(R)$ for some base ring $R$, specify if applicable, e.g., $M_n(\mathbb{Z}_{p^k})$) in the **dishonest majority setting** (where up to $n-1$ parties out of $n$ can be corrupt).
 
