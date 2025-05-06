@@ -1,0 +1,2 @@
+/usr/bin/ar qc liblibOTe_Tests.a CMakeFiles/libOTe_Tests.dir/Vole_Tests.o
+/usr/bin/ranlib liblibOTe_Tests.a

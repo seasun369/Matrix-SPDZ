@@ -1,0 +1,11 @@
+"configurations": [
+  
+        {
+            "type": "cppdbg",
+            "request": "launch",
+            "name": "Launch C++ Program",
+            "program": "${workspaceFolder}/main.o",
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        }
+    ]
