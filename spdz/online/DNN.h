@@ -21,6 +21,7 @@ public:
 
 	mpz_t *a, *a_t, *b, *c, *r, *r_t, *s, *s_bit, *t;
 	mpz_t *mac_a, *mac_a_t, *mac_b, *mac_c, *mac_r, *mac_r_t, *mac_s_spdz, *mac_s_bit_spdz, *mac_t, *mac_t_spdz;
+	mpz_t *a_bit, *b_bit, *c_bit, *a_bit_mac, *b_bit_mac, *c_bit_mac;
 
 	NetIOMP<nP> *io;
 	int party, total_pre, ssp;
@@ -72,6 +73,13 @@ public:
 		mac_t = new mpz_t[max_m_n];
 		mac_t_spdz = new mpz_t[m * n];
 
+		a_bit = new mpz_t[m*n];
+		b_bit = new mpz_t[m*n];
+		c_bit = new mpz_t[m*n];
+		a_bit_mac = new mpz_t[m*n];
+		b_bit_mac = new mpz_t[m*n];
+		c_bit_mac = new mpz_t[m*n];
+
 		omp_set_num_threads(NUM_THREADS);
 #pragma omp parallel for
 		for (int i = 0; i < m * n; i++)
@@ -83,6 +91,12 @@ public:
 			mpz_init(t[i]);
 			mpz_init(mac_t_spdz[i]);
 			mpz_init(mac_s_spdz[i]);
+			mpz_init(a_bit[i]);
+			mpz_init(b_bit[i]);
+			mpz_init(c_bit[i]);
+			mpz_init(a_bit_mac[i]);
+			mpz_init(b_bit_mac[i]);
+			mpz_init(c_bit_mac[i]);
 		}
 		omp_set_num_threads(NUM_THREADS);
 #pragma omp parallel for
@@ -131,6 +145,12 @@ public:
 			mpz_clear(t[i]);
 			mpz_clear(mac_t_spdz[i]);
 			mpz_clear(mac_s_spdz[i]);
+			mpz_clear(a_bit[i]);
+			mpz_clear(b_bit[i]);
+			mpz_clear(c_bit[i]);
+			mpz_clear(a_bit_mac[i]);
+			mpz_clear(b_bit_mac[i]);
+			mpz_clear(c_bit_mac[i]);
 		}
 		omp_set_num_threads(NUM_THREADS);
 #pragma omp parallel for
@@ -190,6 +210,108 @@ public:
 	PRG prg;
 
 	// it should be implemented by offline.
+	void get_bitwise_triple(int l1, int l2, int equal){
+
+		std::filesystem::path baseDir = (equal == 0) ?  "/mnt/extra_space/ztx/spdz-copy/pre_data/predata_mspdz/bitwise/0" : "/mnt/extra_space/ztx/spdz-copy/pre_data/predata_mspdz/bitwise/1";
+		std::vector<std::string> filenames = (equal == 0) ?
+    		std::vector<std::string>{"a_bitwise_mul.txt", "b_bitwise_mul.txt", "c_bitwise_mul.txt", "mac_a_bitwise_mul_spdz.txt","mac_b_bitwise_mul_spdz.txt","mac_c_bitwise_mul_spdz.txt"} :
+    		std::vector<std::string>{"a_bitwise_mul.txt", "square_a_bitwise_mul.txt", "mac_a_bitwise_mul_spdz.txt","mac_square_a_bitwise_mul_spdz.txt"};
+		
+    	// 创建一个 std::vector 来存储 std::ifstream 对象
+    	std::vector<std::ifstream> fileStreams;
+
+    	// 预留空间可以提高效率（可选）
+   	 	fileStreams.reserve(filenames.size());
+		//cout << filenames.size() << endl;
+
+    	//std::cout << "尝试打开文件..." << std::endl;
+		for (const std::string& filename_ : filenames) {
+			try {
+				// 使用 emplace_back 直接在 vector 的末尾构造 ifstream 对象
+				std::filesystem::path filename = baseDir / filename_;
+				fileStreams.emplace_back(filename);
+	
+				// 检查刚刚添加的文件流是否成功打开
+				if (!fileStreams.back()) { // 使用 operator bool() 检查状态
+					 // 注意：如果构造函数本身抛出异常（某些实现可能这样做），这里可能不会执行
+					 // 但通常，如果文件打不开，流对象会被创建，但处于错误状态
+					std::cerr << "警告: 文件 '" << filename << "' 打开失败或流状态错误,但对象已添加到vector中。" << std::endl;
+					// 你可以选择在这里移除这个无效的流，或者保留它并在后续处理中跳过
+					// 例如：fileStreams.pop_back(); // 如果想移除失败的流
+				} else {
+					//std::cout << "文件 '" << filename << "' 成功添加到vector并打开。" << std::endl;
+				}
+			} catch (const std::ifstream::failure& e) {
+				// 捕获可能的构造或打开异常 (如果设置了 exception mask)
+				 std::cerr << "打开文件 '" << filename_ << "' 时发生异常: " << e.what() << std::endl;
+			} catch (const std::exception& e) {
+				 // 捕获其他可能的异常 (例如内存分配失败)
+				 std::cerr << "处理文件 '" << filename_ << "' 时发生一般异常: " << e.what() << std::endl;
+			}
+		}
+
+		std::vector<std::vector<triple>> allTriples;
+
+		for (size_t i = 0; i < fileStreams.size(); ++i) {
+			// 再次检查流是否处于良好状态，特别是如果之前没有移除失败的流
+			if (fileStreams[i]) {
+				std::string line;
+    			std::vector<triple> Triples;
+
+				while (std::getline(fileStreams[i], line)) {
+					triple currentData;
+					std::stringstream lineStream(line);
+			
+					// --- Parsing Logic ---
+					// Assuming the first element is the party identifier (as an integer)
+					if (!(lineStream >> currentData.party)) {
+						std::cerr << "Warning: Failed to parse party ID from line: \"" << line << "\". Skipping line.\n";
+						continue; // Skip this line if party ID is missing/invalid
+					}
+			
+					// Read all subsequent numbers into the values vector
+					uint64_t num;
+					while (lineStream >> num) {
+						currentData.value.push_back(num);
+					}
+			
+					// Optional: Check if any non-numeric data was encountered after the party ID
+					if (lineStream.fail() && !lineStream.eof()) {
+						std::cerr << "Warning: Invalid numeric data encountered in line: \"" << line << "\". Data read so far kept.\n";
+					}
+			
+					// Store the parsed data (using move semantics for efficiency)
+					Triples.push_back(std::move(currentData));
+				}
+				allTriples.push_back(std::move(Triples));
+				// 不需要手动 close()，当 fileStreams[i] 离开作用域或 vector 被销毁时，
+				// ifstream 的析构函数会自动关闭文件（RAII）。
+			} else {
+				 std::cout << "\n--- 跳过文件: " << filenames[i] << " (之前打开失败或状态错误) ---" << std::endl;
+			}
+		}
+		if(equal==0){
+			for (int j = 0; j < l1*l2; j++){
+				mpz_init_set_ui(a_bit[j], allTriples[0][party-1].value[j]);
+				mpz_init_set_ui(b_bit[j], allTriples[1][party-1].value[j]);
+				mpz_init_set_ui(c_bit[j], allTriples[2][party-1].value[j]);
+				mpz_init_set_ui(a_bit_mac[j], allTriples[3][party-1].value[j]);
+				mpz_init_set_ui(b_bit_mac[j], allTriples[4][party-1].value[j]);
+				mpz_init_set_ui(c_bit_mac[j], allTriples[5][party-1].value[j]);
+			}
+		} else{
+			for (int j = 0; j < l1*l2; j++){
+				mpz_init_set_ui(a_bit[j], allTriples[0][party-1].value[j]);
+				mpz_init_set(b_bit[j], a_bit[j]);
+				mpz_init_set_ui(c_bit[j], allTriples[1][party-1].value[j]);
+				mpz_init_set_ui(a_bit_mac[j], allTriples[2][party-1].value[j]);
+				mpz_init_set(b_bit_mac[j], a_bit_mac[j]);
+				mpz_init_set_ui(c_bit_mac[j], allTriples[3][party-1].value[j]);
+			}
+		}
+		
+	}
+	
 	void get_transform_tuple(int l1, int l3)
 	{
 		std::ifstream fin1;
@@ -1485,10 +1607,245 @@ public:
 		delete[] mac_f_t;
 	}
 
-	// equal means x=y
-	void Online_bitwise_mul(mpz_t *x, mpz_t *y, mpz_t *mac_x_spdz, mpz_t *mac_y_spdz, mpz_t *output, mpz_t *output_mac_spdz, int l1, int l2, int key_length, int equal)
+	void Online_bitwise_mul(mpz_t *x, mpz_t *y, mpz_t *output, mpz_t *output_mac, int l1, int l2, int equal)
 	{
-		//
+		get_bitwise_triple(l1,l2,equal);
+		gmp_printf("]: %Zd\n", key[0]);
+
+		mpz_t ppp;
+		mpz_init(ppp);
+		mpz_set_ui(ppp, 2305843009213693951UL);
+
+		mpz_t *d = new mpz_t[l1 * l2];
+		mpz_t *e = new mpz_t[l1 * l2];
+		//mpz_t *f = new mpz_t[l3 * l1];
+		uint64_t *d_int = new uint64_t[l1 * l2], *e_int = new uint64_t[l1 * l2];//*f_int = new uint64_t[l3 * l1];
+
+		omp_set_num_threads(NUM_THREADS);
+		#pragma omp parallel for
+		for (int i = 0; i < l1 * l2; i++)
+		{
+			mpz_init(d[i]);
+			mpz_sub(d[i], x[i], a_bit[i]);
+			mpz_mod(d[i], d[i], ppp);
+			d_int[i] = mpz_get_ui(d[i]);
+		}
+
+		omp_set_num_threads(NUM_THREADS);
+		#pragma omp parallel for
+		for (int i = 0; i < l1 * l2; i++)
+		{
+			mpz_init(e[i]);
+			mpz_sub(e[i], y[i], b_bit[i]);
+			mpz_mod(e[i], e[i], ppp);
+			e_int[i] = mpz_get_ui(e[i]);
+		}
+		
+		// open d
+		if (party != 1)
+		{
+			io->send_data(1, d_int, l1 * l2 * sizeof(uint64_t));
+			io->flush(1);
+			io->recv_data(1, d_int, l1 * l2 * sizeof(uint64_t));
+			omp_set_num_threads(NUM_THREADS);
+			#pragma omp parallel for
+			for (int i = 0; i < l1 * l2; i++)
+			{
+				mpz_set_ui(d[i], d_int[i]);
+			}
+		}
+		else
+		{
+			uint64_t *tmp[nP + 1];
+			for (int i = 1; i <= nP; ++i)
+			{
+				tmp[i] = new uint64_t[l1 * l2];
+			}
+			vector<future<void>> res;
+			int party2 = 2;
+			res.push_back(pool->enqueue([this, tmp, party2, l1, l2]()
+										{ io->recv_data(party2, tmp[party2], l1 * l2 * sizeof(uint64_t)); }));
+			joinNclean(res);
+
+			mpz_t *tmp_i = new mpz_t[l1 * l2];
+			omp_set_num_threads(NUM_THREADS);
+			#pragma omp parallel for
+			for (int i = 0; i < l1 * l2; ++i)
+			{
+				mpz_init(tmp_i[i]);
+				mpz_set_ui(tmp_i[i], tmp[2][i]);
+				mpz_add(d[i], d[i], tmp_i[i]);
+				mpz_mod(d[i], d[i], ppp);
+				d_int[i] = mpz_get_ui(d[i]);
+				mpz_clear(tmp_i[i]);
+			}
+			delete[] tmp_i;
+
+			res.push_back(pool->enqueue([this, d_int, party2, l1, l2]()
+										{
+					io->send_data(party2, d_int, l1 * l2 * sizeof(uint64_t));
+					io->flush(party2); }));
+			joinNclean(res);
+
+			for (int i = 1; i <= nP; ++i)
+			{
+				delete[] tmp[i];
+			}
+		}
+		
+		// open e
+		if (party != 1)
+		{
+			io->send_data(1, e_int, l1 * l2 * sizeof(uint64_t));
+			io->flush(1);
+			io->recv_data(1, e_int, l1 * l2 * sizeof(uint64_t));
+			omp_set_num_threads(NUM_THREADS);
+			#pragma omp parallel for
+			for (int i = 0; i < l1 * l2; i++)
+			{
+				mpz_set_ui(e[i], e_int[i]);
+			}
+		}
+		else
+		{
+			uint64_t *tmp[nP + 1];
+			for (int i = 1; i <= nP; ++i)
+			{
+				tmp[i] = new uint64_t[l2 * l1];
+			}
+			vector<future<void>> res;
+			int party2 = 2;
+			res.push_back(pool->enqueue([this, tmp, party2, l1, l2]()
+										{ io->recv_data(party2, tmp[party2], l1 * l2 * sizeof(uint64_t)); }));
+			joinNclean(res);
+
+			mpz_t *tmp_i = new mpz_t[l1 * l2];
+			omp_set_num_threads(NUM_THREADS);
+			#pragma omp parallel for
+			for (int i = 0; i < l1 * l2; ++i)
+			{
+				mpz_init(tmp_i[i]);
+				mpz_set_ui(tmp_i[i], tmp[2][i]);
+				mpz_add(e[i], e[i], tmp_i[i]);
+				mpz_mod(e[i], e[i], ppp);
+				e_int[i] = mpz_get_ui(e[i]);
+				mpz_clear(tmp_i[i]);
+			}
+			delete[] tmp_i;
+
+			res.push_back(pool->enqueue([this, e_int, party2, l1, l2]()
+										{
+					io->send_data(party2, e_int, l1 * l2 * sizeof(uint64_t));
+					io->flush(party2); }));
+			joinNclean(res);
+			for (int i = 1; i <= nP; ++i)
+			{
+				delete[] tmp[i];
+			}
+		}
+
+		gmp_printf("a_bit : %Zd\n", a_bit[0]);
+		gmp_printf("b_bit : %Zd\n", b_bit[0]);
+		gmp_printf("d : %Zd\n", d[0]);
+		gmp_printf("e : %Zd\n", e[0]);
+		
+		mpz_t *de = new mpz_t[l1 * l2];
+		mpz_t *ae = new mpz_t[l1 * l2];
+		mpz_t *db = new mpz_t[l1 * l2];
+
+		mpz_t *de_spdz_mac = new mpz_t[l1 * l2];
+		mpz_t *ae_spdz_mac = new mpz_t[l1 * l2];
+		mpz_t *db_spdz_mac = new mpz_t[l1 * l2];
+
+		omp_set_num_threads(NUM_THREADS);
+		#pragma omp parallel for
+		for (int i = 0; i < l1; i++){
+			for( int j = 0; j < l2; j++){
+				int idx = i * l2 + j;
+				mpz_init(de[idx]);
+				mpz_set_ui(de[idx], 0);
+				mpz_init(ae[idx]);
+				mpz_set_ui(ae[idx], 0);
+				mpz_init(db[idx]);
+				mpz_set_ui(db[idx], 0);
+				mpz_init(de_spdz_mac[idx]);
+				mpz_set_ui(de_spdz_mac[idx], 0);
+				mpz_init(ae_spdz_mac[idx]);
+				mpz_set_ui(ae_spdz_mac[idx], 0);
+				mpz_init(db_spdz_mac[idx]);
+				mpz_set_ui(db_spdz_mac[idx], 0);
+
+				mpz_mul(de[idx], d[idx], e[idx]);
+				mpz_mul(ae[idx], a_bit[idx], e[idx]);
+				mpz_mul(db[idx], d[idx], b_bit[idx]);
+				mpz_mul(de_spdz_mac[idx], de[idx], key[j]);
+				mpz_mul(ae_spdz_mac[idx], a_bit_mac[idx], e[idx]);
+				mpz_mul(db_spdz_mac[idx], d[idx], b_bit_mac[idx]);
+
+				mpz_mod(de[idx], de[idx], ppp);
+				mpz_mod(ae[idx], ae[idx], ppp);
+				mpz_mod(db[idx], db[idx], ppp);
+				mpz_mod(de_spdz_mac[idx], de_spdz_mac[idx], ppp);
+				mpz_mod(ae_spdz_mac[idx], ae_spdz_mac[idx], ppp);
+				mpz_mod(db_spdz_mac[idx], db_spdz_mac[idx], ppp);
+			}
+		}
+
+		omp_set_num_threads(NUM_THREADS);
+		#pragma omp parallel for
+		for (int i = 0; i < l1 * l2; ++i)
+		{
+			if (party == 1)
+			{
+				mpz_add(output[i], c_bit[i], db[i]);
+				mpz_add(output[i], output[i], de[i]);
+				mpz_add(output[i], output[i], ae[i]);
+				mpz_mod(output[i], output[i], ppp);
+			}
+			else
+			{
+				mpz_add(output[i], c_bit[i], db[i]);
+				mpz_add(output[i], output[i], ae[i]);
+				mpz_mod(output[i], output[i], ppp);
+			}
+		}
+
+		omp_set_num_threads(NUM_THREADS);
+		#pragma omp parallel for
+		for (int i = 0; i < l1 * l2; i++)
+		{
+			mpz_add(output_mac[i], c_bit_mac[i], db_spdz_mac[i]);
+			mpz_add(output_mac[i], output_mac[i], de_spdz_mac[i]);
+			mpz_add(output_mac[i], output_mac[i], ae_spdz_mac[i]);
+			mpz_mod(output_mac[i], output_mac[i], ppp);
+		}
+
+		omp_set_num_threads(NUM_THREADS);
+		#pragma omp parallel for
+		for (int i = 0; i < l1 * l2; i++)
+		{
+			mpz_clear(d[i]);
+			mpz_clear(e[i]);
+			mpz_clear(de[i]);
+			mpz_clear(db[i]);
+			mpz_clear(ae[i]);
+			mpz_clear(de_spdz_mac[i]);
+			mpz_clear(db_spdz_mac[i]);
+			mpz_clear(ae_spdz_mac[i]);
+		}
+
+		mpz_clear(ppp);
+
+		delete[] d;
+		delete[] d_int;
+		delete[] e;
+		delete[] e_int;
+		delete[] db;
+		delete[] de;
+		delete[] ae;
+		delete[] db_spdz_mac;
+		delete[] de_spdz_mac;
+		delete[] ae_spdz_mac;
 	}
 
 	// derivative of x^2
