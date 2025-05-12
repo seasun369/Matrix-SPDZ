@@ -212,7 +212,8 @@ public:
 	// it should be implemented by offline.
 	void get_bitwise_triple(int l1, int l2, int equal){
 
-		std::filesystem::path baseDir = (equal == 0) ?  "/mnt/extra_space/ztx/spdz-copy/pre_data/predata_mspdz/bitwise/0" : "/mnt/extra_space/ztx/spdz-copy/pre_data/predata_mspdz/bitwise/1";
+		if(l2 == 10) {std::filesystem::path baseDir = (equal == 0) ?  "/mnt/extra_space/ztx/Matrix-SPDZ/spdz/pre_data/predata_mspdz/DNN/bitwise/128x10/0" : "/mnt/extra_space/ztx/Matrix-SPDZ/spdz/pre_data/predata_mspdz/DNN/bitwise/128x10/1";}
+		else if(l2 == 128) {std::filesystem::path baseDir = (equal == 0) ?  "/mnt/extra_space/ztx/Matrix-SPDZ/spdz/pre_data/predata_mspdz/DNN/bitwise/128x128/0" : "/mnt/extra_space/ztx/Matrix-SPDZ/spdz/pre_data/predata_mspdz/DNN/bitwise/128x128/1";}
 		std::vector<std::string> filenames = (equal == 0) ?
     		std::vector<std::string>{"a_bitwise_mul.txt", "b_bitwise_mul.txt", "c_bitwise_mul.txt", "mac_a_bitwise_mul_spdz.txt","mac_b_bitwise_mul_spdz.txt","mac_c_bitwise_mul_spdz.txt"} :
     		std::vector<std::string>{"a_bitwise_mul.txt", "square_a_bitwise_mul.txt", "mac_a_bitwise_mul_spdz.txt","mac_square_a_bitwise_mul_spdz.txt"};
