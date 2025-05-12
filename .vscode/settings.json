@@ -69,7 +69,8 @@
         "typeinfo": "cpp",
         "variant": "cpp",
         "iterator": "cpp",
-        "random": "cpp"
+        "random": "cpp",
+        "bitset": "cpp"
     },
     "cmake.sourceDirectory": "/mnt/extra_space/ztx/Matrix-SPDZ/VOLE"
 }

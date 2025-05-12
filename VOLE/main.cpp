@@ -32,7 +32,7 @@ int main()
   const u64 row=128;
   const u64 rightcolumn=128;
   u64 batchSize=5000;
-  u64 batch=10;
+  u64 batch=1;
   auto chl1 = cp::LocalAsyncSocket::makePair();
   auto chl2 = cp::LocalAsyncSocket::makePair();
   Party<u64, CoeffCtxIntegerPrime> party1, party2;
