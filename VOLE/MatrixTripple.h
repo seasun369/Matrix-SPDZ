@@ -8,7 +8,7 @@
 #include <libOTe/Tools/CoeffCtx.h>
 //#include "Party.h"
 //#include "Share.h"
-//#include "Localcomputation.h"
+#include "Localcomputation.h"
 #define Alice 1
 #define Bob 2
 using namespace osuCrypto;
