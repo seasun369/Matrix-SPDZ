@@ -10,6 +10,11 @@
 #include "../mpir/mpir.h"
 #include <algorithm>
 #include <vector>
+#include <fstream>
+#include <string>
+#include <iostream>
+#include <filesystem> // 包含 filesystem 头文件
+#include <stdexcept>
 using namespace emp;
 
 // Matrix SPDZ
@@ -213,7 +218,7 @@ public:
 	void get_bitwise_triple(int l1, int l2, int equal){
 
 		if(l2 == 10) {std::filesystem::path baseDir = (equal == 0) ?  "/mnt/extra_space/ztx/Matrix-SPDZ/spdz/pre_data/predata_mspdz/DNN/bitwise/128x10/0" : "/mnt/extra_space/ztx/Matrix-SPDZ/spdz/pre_data/predata_mspdz/DNN/bitwise/128x10/1";}
-		else if(l2 == 128) {std::filesystem::path baseDir = (equal == 0) ?  "/mnt/extra_space/ztx/Matrix-SPDZ/spdz/pre_data/predata_mspdz/DNN/bitwise/128x128/0" : "/mnt/extra_space/ztx/Matrix-SPDZ/spdz/pre_data/predata_mspdz/DNN/bitwise/128x128/1";}
+		else {std::filesystem::path baseDir = (equal == 0) ?  "/mnt/extra_space/ztx/Matrix-SPDZ/spdz/pre_data/predata_mspdz/DNN/bitwise/128x128/0" : "/mnt/extra_space/ztx/Matrix-SPDZ/spdz/pre_data/predata_mspdz/DNN/bitwise/128x128/1";}
 		std::vector<std::string> filenames = (equal == 0) ?
     		std::vector<std::string>{"a_bitwise_mul.txt", "b_bitwise_mul.txt", "c_bitwise_mul.txt", "mac_a_bitwise_mul_spdz.txt","mac_b_bitwise_mul_spdz.txt","mac_c_bitwise_mul_spdz.txt"} :
     		std::vector<std::string>{"a_bitwise_mul.txt", "square_a_bitwise_mul.txt", "mac_a_bitwise_mul_spdz.txt","mac_square_a_bitwise_mul_spdz.txt"};
