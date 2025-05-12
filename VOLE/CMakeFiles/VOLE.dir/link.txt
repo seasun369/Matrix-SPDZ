@@ -1,2 +1,0 @@
-/usr/bin/ar qc libVOLE.a CMakeFiles/VOLE.dir/Vole_Tests.o
-/usr/bin/ranlib libVOLE.a
