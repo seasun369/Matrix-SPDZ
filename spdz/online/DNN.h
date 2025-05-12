@@ -2233,12 +2233,12 @@ public:
 
 				// forward propagation
 				forward_propagation(batch_input, w1, b1, batch_z1, batch_input_mac, mac_w1, mac_b1_spdz, batch_z1_mac, batch_z1_mac_spdz, batch_size, inputnodes, hiddennodes, key_length);
-				Online_bitwise_mul(batch_z1, batch_z1, batch_z1_mac_spdz, batch_z1_mac_spdz, batch_a1, batch_a1_mac_spdz, batch_size, hiddennodes, key_length, 1);
+				Online_bitwise_mul(batch_z1, batch_z1, batch_a1, batch_a1_mac_spdz, batch_size, hiddennodes, key_length, 1);
 				truncate(batch_a1, batch_a1_mac_spdz, accuracy, batch_size, hiddennodes, key_length);
 				transform_spdzmac_to_vectormac(batch_a1_mac, batch_a1_mac_spdz, batch_size, hiddennodes);
 
 				forward_propagation(batch_a1, w2, b2, batch_z2, batch_a1_mac, mac_w2, mac_b2_spdz, batch_z2_mac, batch_z2_mac_spdz, batch_size, hiddennodes, outputnodes, key_length);
-				Online_bitwise_mul(batch_z2, batch_z2, batch_z2_mac_spdz, batch_z2_mac_spdz, batch_a2, batch_a2_mac_spdz, batch_size, outputnodes, key_length, 1);
+				Online_bitwise_mul(batch_z2, batch_z2, batch_a2, batch_a2_mac_spdz, batch_size, outputnodes, key_length, 1);
 				truncate(batch_a2, batch_a2_mac_spdz, accuracy, batch_size, outputnodes, key_length);
 				// transform_spdzmac_to_vectormac(batch_a2_mac, batch_a2_mac_spdz, batch_size, outputnodes);
 
@@ -2254,7 +2254,7 @@ public:
 					mpz_sub(batch_a2_mac_spdz[j4], batch_a2_mac_spdz[j4], batch_label_mac_spdz[j4]);
 					mpz_mod(batch_a2_mac_spdz[j4], dz2_mac_spdz[j4], ppp);
 				}
-				Online_bitwise_mul(batch_a2, batch_z2, batch_a2_mac_spdz, batch_z2_mac_spdz, dz2, dz2_mac_spdz, batch_size, outputnodes, key_length, 0);
+				Online_bitwise_mul(batch_a2, batch_z2, dz2, dz2_mac_spdz, batch_size, outputnodes, key_length, 0);
 				truncate(dz2, dz2_mac_spdz, accuracy, batch_size, outputnodes, key_length);
 
 				// generate dz1 & dz1_mac_spdz
@@ -2269,7 +2269,7 @@ public:
 				Online_nonsqure_mul(w2, dz2_t, mac_w2, dz2_t_mac, middle1, middle1_mac, hiddennodes, outputnodes, batch_size, key_length);
 				transform_vectormac_to_spdzmac(middle1, middle1_mac, middle1_mac_spdz, hiddennodes, batch_size);
 				// compute dz1
-				Online_bitwise_mul(middle1, batch_z1_t, middle1_mac_spdz, batch_z1_t_mac_spdz, dz1, dz1_mac_spdz, hiddennodes, batch_size, key_length, 0);
+				Online_bitwise_mul(middle1, batch_z1_t, dz1, dz1_mac_spdz, hiddennodes, batch_size, key_length, 0);
 
 				// update w2
 				// compute a1_t
