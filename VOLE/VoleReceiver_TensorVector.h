@@ -1,3 +1,6 @@
+#ifndef VOLE_RECEIVEER_TENSOR_H
+#define VOLE_RECEIVEER_TENSOR_H
+
 #include "Tools/VopeReceiver.h"
 #include <cryptoTools/Network/Session.h>
 #include <cryptoTools/Network/IOService.h>
@@ -61,3 +64,5 @@ void VoleReceiver_TensorVector(std::vector<std::vector<G>> &ret, std::vector<std
     //std::cout<<ret[0][0]<<std::endl;
 
 }
+
+#endif

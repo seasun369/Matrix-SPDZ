@@ -1,4 +1,5 @@
-
+#ifndef LOCAL_COMPUTATION_H
+#define LOCAL_COMPUTATION_H
 
 using namespace osuCrypto;
 
@@ -29,3 +30,5 @@ void local_matrix_product(Share<G,Ctx> &ret,  const Share<G,Ctx> &shareA, const 
     ctx.matrix_product(ret.MatrixShare, shareA.MatrixShare, publicMatrix);
     ctx.vector_matrix_product(ret.leftMatrixShareMac, shareA.leftMatrixShareMac, publicMatrix);
 }
+
+#endif

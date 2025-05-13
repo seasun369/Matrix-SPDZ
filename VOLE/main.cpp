@@ -19,10 +19,6 @@
 #define Bob 2
 using namespace osuCrypto;
 
-
-
-
-
 int main()
 {
 

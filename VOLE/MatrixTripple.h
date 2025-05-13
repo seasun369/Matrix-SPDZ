@@ -1,4 +1,5 @@
-
+#ifndef MATRIX_TRIPLE_H
+#define MATRIX_TRIPLE_H
 
 //#include "Authentication.h"
 #include <libOTe_Tests/Common.h>
@@ -166,3 +167,5 @@ void generate_Matrix_product_share(class Party<G,Ctx> party, std::vector<std::ve
         ctx.matrix_plus(ret, ret, ret2);
         ctx.matrix_minus(ret, ret, ret1);
 }
+
+#endif

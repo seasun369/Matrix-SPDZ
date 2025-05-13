@@ -1,3 +1,6 @@
+#ifndef MATRIX_TRANSPOSE_H
+#define MATRIX_TRANSPOSE_H
+
 #define Alice 1
 #define Bob 2
 using namespace osuCrypto;
@@ -107,3 +110,5 @@ MultType type)
             R.resize(batch_size-1);
             R_t.resize(batch_size-1);
 }
+
+#endif

@@ -1,3 +1,6 @@
+#ifndef VOLE_SENDER_TENSOR_H
+#define VOLE_SENDER_TENSOR_H
+
 
 #include "Tools/VopeSender.h"
 #include <cryptoTools/Network/Session.h>
@@ -59,3 +62,5 @@ void VoleSender_TensorVector(std::vector<std::vector<G>> &ret, std::vector<std::
       }
     }
   }
+
+  #endif

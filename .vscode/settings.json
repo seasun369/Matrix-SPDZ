@@ -73,5 +73,6 @@
         "bitset": "cpp",
         "fstream": "cpp"
     },
-    "cmake.sourceDirectory": "/mnt/extra_space/ztx/Matrix-SPDZ/VOLE"
+    "cmake.sourceDirectory": "/mnt/extra_space/ztx/Matrix-SPDZ/VOLE",
+    "C_Cpp.errorSquiggles": "enabled"
 }

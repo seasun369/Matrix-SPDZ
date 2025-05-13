@@ -1,3 +1,6 @@
+#ifndef AUTHENTICATION_H
+#define AUTHENTICATION_H
+
 #include "VoleReceiver_TensorVector.h"
 #include "VoleSender_TensorVector.h"
 #include <libOTe_Tests/Common.h>
@@ -216,3 +219,5 @@ void check_mac(class Party<G,Ctx> party, std::vector<G> &mac, std::vector<std::v
                         std::rethrow_exception(eptr);
                       }
 }
+
+#endif
